@@ -1,0 +1,1521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SaaS Notification Hub - Twilio & SendGrid Style</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- React & Babel CDNs -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        :root {
+            /* Light Theme Variables */
+            --bg-primary: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #0f172a;
+            --text-secondary: #64748b;
+            --border: #e2e8f0;
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --success: #10b981;
+            --success-bg: #d1fae5;
+            --warning: #f59e0b;
+            --warning-bg: #fef3c7;
+            --danger: #ef4444;
+            --danger-bg: #fee2e2;
+            --accent: #06b6d4;
+            --shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.08);
+            --font-display: 'Outfit', sans-serif;
+            --font-sans: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        [data-theme='dark'] {
+            /* Dark Theme Variables */
+            --bg-primary: #0b0f19;
+            --bg-card: #151d30;
+            --text-main: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border: #1e293b;
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --success: #34d399;
+            --success-bg: rgba(52, 211, 153, 0.15);
+            --warning: #fbbf24;
+            --warning-bg: rgba(251, 191, 36, 0.15);
+            --danger: #f87171;
+            --danger-bg: rgba(248, 113, 113, 0.15);
+            --shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: var(--font-sans);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Container Layout */
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            padding: 24px;
+            flex-grow: 1;
+        }
+
+        /* Top Header Styling */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            background: var(--bg-card);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            margin-bottom: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.25em;
+            font-family: var(--font-display);
+        }
+
+        .logo-text h1 {
+            font-family: var(--font-display);
+            font-size: 1.4em;
+            font-weight: 700;
+            background: linear-gradient(to right, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-text p {
+            font-size: 0.8em;
+            color: var(--text-secondary);
+        }
+
+        .nav-controls {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        /* Custom Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.9em;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            border-color: var(--border);
+            color: var(--text-main);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--border);
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-main);
+            font-size: 1.4em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+
+        .theme-toggle:hover {
+            background-color: var(--border);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--primary);
+        }
+
+        .stat-card.stat-success::after { background: var(--success); }
+        .stat-card.stat-failed::after { background: var(--danger); }
+        .stat-card.stat-scheduled::after { background: var(--warning); }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 2.2em;
+            font-weight: 700;
+            font-family: var(--font-display);
+            margin: 12px 0 4px 0;
+        }
+
+        /* Main Workspace Grid */
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: 1.6fr 2.4fr;
+            gap: 24px;
+            align-items: start;
+        }
+
+        @media (max-width: 1024px) {
+            .workspace-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+            margin-bottom: 24px;
+        }
+
+        .card-title {
+            font-family: var(--font-display);
+            font-size: 1.25em;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: var(--text-main);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+        }
+
+        /* Form Controls */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.85em;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            font-size: 0.95em;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        /* Custom Badge style */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.75em;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .badge-success { background-color: var(--success-bg); color: var(--success); }
+        .badge-pending { background-color: var(--warning-bg); color: var(--warning); }
+        .badge-failed { background-color: var(--danger-bg); color: var(--danger); }
+        .badge-info { background-color: rgba(6, 182, 212, 0.15); color: var(--accent); }
+
+        /* Dynamic variable input cards */
+        .variables-box {
+            background-color: var(--bg-primary);
+            border: 1px dashed var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+        }
+
+        .variable-item {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        /* Table Styling */
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            background-color: var(--bg-primary);
+            padding: 12px 16px;
+            font-size: 0.8em;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--border);
+        }
+
+        td {
+            padding: 14px 16px;
+            font-size: 0.9em;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-main);
+        }
+
+        tr:hover td {
+            background-color: rgba(99, 102, 241, 0.03);
+        }
+
+        /* Live feed websocket list */
+        .feed-list {
+            max-height: 350px;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background-color: var(--bg-primary);
+        }
+
+        .feed-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85em;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .feed-item:last-child {
+            border-bottom: none;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .connection-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .dot-green { background-color: var(--success); box-shadow: 0 0 8px var(--success); }
+        .dot-red { background-color: var(--danger); box-shadow: 0 0 8px var(--danger); }
+
+        .api-key-box {
+            font-family: monospace;
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            word-break: break-all;
+        }
+
+        .api-key-box span {
+            color: var(--accent);
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+<div id="root"></div>
+
+<!-- React App Implementation -->
+<script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    function App() {
+        // App Theme State
+        const [theme, setTheme] = useState('light');
+        
+        // Developer API Key
+        const [apiKey, setApiKey] = useState('nk_live_devkey1234567890default');
+        const [newApiKey, setNewApiKey] = useState('');
+        const [apiKeysList, setApiKeysList] = useState([]);
+        const [apiKeyName, setApiKeyName] = useState('');
+        const [apiKeyPerms, setApiKeyPerms] = useState({
+            SEND_NOTIFICATION: true,
+            READ_HISTORY: true,
+            MANAGE_KEYS: false,
+            MANAGE_TEMPLATES: false
+        });
+
+        // WebSocket Stream Connection State
+        const [wsConnected, setWsConnected] = useState(false);
+        const [liveFeed, setLiveFeed] = useState([]);
+
+        // Platform Stats
+        const [stats, setStats] = useState({
+            total: 0,
+            sent: 0,
+            delivered: 0,
+            failed: 0,
+            activeSchedules: 0
+        });
+
+        // Template System States
+        const [templates, setTemplates] = useState([]);
+        const [selectedTemplateName, setSelectedTemplateName] = useState('');
+        const [templateVars, setTemplateVars] = useState({});
+        const [newTemplate, setNewTemplate] = useState({
+            name: '',
+            subject: '',
+            content: '',
+            channel: 'EMAIL'
+        });
+
+        // Send Form States
+        const [sendData, setSendData] = useState({
+            to: '',
+            subject: '',
+            body: '',
+            type: 'EMAIL',
+            isScheduled: false,
+            cronExpression: '0 * * * * ?' // every minute
+        });
+
+        // Webhook states
+        const [webhooks, setWebhooks] = useState([]);
+        const [webhookUrl, setWebhookUrl] = useState('');
+        const [webhookEvents, setWebhookEvents] = useState({
+            SENT: true,
+            DELIVERED: true,
+            FAILED: true,
+            OPENED: false,
+            CLICKED: false
+        });
+
+        // Active Schedules
+        const [schedulesList, setSchedulesList] = useState([]);
+
+        // Audit Logs
+        const [auditLogs, setAuditLogs] = useState([]);
+
+        // Chart References
+        const chartRef = useRef(null);
+        const chartInstanceRef = useRef(null);
+
+        // Toggle Theme
+        const toggleTheme = () => {
+            const nextTheme = theme === 'light' ? 'dark' : 'light';
+            setTheme(nextTheme);
+            document.documentElement.setAttribute('data-theme', nextTheme);
+        };
+
+        // Initialize Native WebSocket for delivery updates
+        useEffect(() => {
+            const socketUrl = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws/events`;
+            let ws;
+
+            function connect() {
+                logConsole("Attempting WebSocket Connection to " + socketUrl);
+                ws = new WebSocket(socketUrl);
+
+                ws.onopen = () => {
+                    logConsole("WebSocket Connected");
+                    setWsConnected(true);
+                };
+
+                ws.onmessage = (event) => {
+                    try {
+                        const eventData = JSON.parse(event.data);
+                        logConsole("Received Real-time Event: " + eventData.status + " for " + eventData.notificationId);
+                        
+                        // Add to live feed
+                        setLiveFeed(prev => [eventData, ...prev].slice(0, 100));
+
+                        // Refresh stats and history logs dynamically
+                        fetchHistory();
+                    } catch (e) {
+                        console.error("Failed to parse websocket message", e);
+                    }
+                };
+
+                ws.onclose = () => {
+                    logConsole("WebSocket Disconnected. Reconnecting in 5s...");
+                    setWsConnected(false);
+                    setTimeout(connect, 5000);
+                };
+
+                ws.onerror = (err) => {
+                    console.error("WebSocket error:", err);
+                    ws.close();
+                };
+            }
+
+            connect();
+            return () => {
+                if (ws) ws.close();
+            };
+        }, []);
+
+        // Fetch data initially and when API Key changes
+        useEffect(() => {
+            if (apiKey) {
+                fetchHistory();
+                fetchTemplates();
+                fetchKeys();
+                fetchWebhooks();
+                fetchSchedules();
+                fetchAuditLogs();
+            }
+        }, [apiKey]);
+
+        // Draw and update real-time charts using Chart.js
+        useEffect(() => {
+            if (chartInstanceRef.current) {
+                chartInstanceRef.current.destroy();
+            }
+
+            const ctx = chartRef.current.getContext('2d');
+            
+            // Build metrics per hour for last 6 hours
+            const now = new Date();
+            const labels = [];
+            const counts = [0, 0, 0, 0, 0, 0];
+
+            for (let i = 5; i >= 0; i--) {
+                const hourTime = new Date(now.getTime() - i * 60 * 60 * 1000);
+                labels.push(hourTime.getHours() + ":00");
+            }
+
+            // Aggregate counts from live feed / history
+            const hoursMap = {};
+            liveFeed.forEach(item => {
+                if (item.timestamp) {
+                    const time = new Date(item.timestamp);
+                    const hour = time.getHours();
+                    hoursMap[hour] = (hoursMap[hour] || 0) + 1;
+                }
+            });
+
+            // Map values to chart
+            for (let i = 0; i < 6; i++) {
+                const hourStr = labels[i].split(":")[0];
+                counts[i] = hoursMap[parseInt(hourStr)] || 0;
+            }
+
+            chartInstanceRef.current = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Deliveries / Hour',
+                        data: counts,
+                        borderColor: '#6366f1',
+                        backgroundColor: 'rgba(99, 102, 241, 0.15)',
+                        tension: 0.4,
+                        fill: true,
+                        borderWidth: 3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: theme === 'dark' ? '#1e293b' : '#f1f5f9' },
+                            ticks: { color: theme === 'dark' ? '#94a3b8' : '#64748b' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: theme === 'dark' ? '#94a3b8' : '#64748b' }
+                        }
+                    }
+                }
+            });
+        }, [liveFeed, theme]);
+
+        // REST Requests Helpers
+        const getHeaders = () => ({
+            'Content-Type': 'application/json',
+            'X-API-Key': apiKey
+        });
+
+        const logConsole = (msg) => {
+            console.log(`[SaaS Hub] ${msg}`);
+        };
+
+        const fetchHistory = async () => {
+            try {
+                const res = await fetch('/api/v1/notifications/history', { headers: getHeaders() });
+                if (res.ok) {
+                    const data = await res.json();
+                    
+                    // Update stats
+                    const total = data.length;
+                    const sent = data.filter(n => n.status === 'SENT').length;
+                    const delivered = data.filter(n => n.status === 'DELIVERED' || n.status === 'OPENED' || n.status === 'CLICKED').length;
+                    const failed = data.filter(n => n.status === 'FAILED').length;
+
+                    setStats(prev => ({
+                        ...prev,
+                        total,
+                        sent,
+                        delivered,
+                        failed
+                    }));
+                }
+            } catch (err) {
+                console.error("Failed to fetch history:", err);
+            }
+        };
+
+        const fetchTemplates = async () => {
+            try {
+                const res = await fetch('/api/v1/templates', { headers: getHeaders() });
+                if (res.ok) {
+                    const data = await res.json();
+                    setTemplates(data);
+                }
+            } catch (err) {
+                console.error("Failed to fetch templates:", err);
+            }
+        };
+
+        const fetchKeys = async () => {
+            try {
+                const res = await fetch('/api/v1/api-keys', { headers: getHeaders() });
+                if (res.ok) {
+                    const data = await res.json();
+                    setApiKeysList(data);
+                }
+            } catch (err) {
+                console.error("Failed to fetch keys:", err);
+            }
+        };
+
+        const fetchWebhooks = async () => {
+            try {
+                const res = await fetch('/api/v1/webhooks', { headers: getHeaders() });
+                if (res.ok) {
+                    const data = await res.json();
+                    setWebhooks(data);
+                }
+            } catch (err) {
+                console.error("Failed to fetch webhooks:", err);
+            }
+        };
+
+        const fetchSchedules = async () => {
+            try {
+                const res = await fetch('/api/v1/notifications/schedules', { headers: getHeaders() });
+                if (res.ok) {
+                    const data = await res.json();
+                    setSchedulesList(data);
+                    setStats(prev => ({ ...prev, activeSchedules: data.length }));
+                }
+            } catch (err) {
+                console.error("Failed to fetch schedules:", err);
+            }
+        };
+
+        const fetchAuditLogs = async () => {
+            try {
+                const res = await fetch('/api/v1/audit-logs', { headers: getHeaders() });
+                if (res.ok) {
+                    const data = await res.json();
+                    setAuditLogs(data);
+                }
+            } catch (err) {
+                console.error("Failed to fetch audit logs:", err);
+            }
+        };
+
+        // Form Submit handlers
+        const handleSendNotification = async (e) => {
+            e.preventDefault();
+            
+            const endpoint = sendData.isScheduled ? '/api/v1/notifications/schedule' : '/api/v1/notifications/send';
+            
+            let payload = {
+                to: sendData.to,
+                subject: sendData.subject,
+                type: sendData.type
+            };
+
+            if (sendData.isScheduled) {
+                payload.cronExpression = sendData.cronExpression;
+                if (selectedTemplateName) {
+                    payload.templateName = selectedTemplateName;
+                } else {
+                    payload.bodyTemplate = sendData.body;
+                }
+                payload.variables = templateVars;
+            } else {
+                if (selectedTemplateName) {
+                    payload.templateName = selectedTemplateName;
+                    payload.variables = templateVars;
+                } else {
+                    payload.body = sendData.body;
+                }
+            }
+
+            try {
+                const res = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify(payload)
+                });
+                
+                if (res.ok) {
+                    alert(sendData.isScheduled ? "Notification scheduled successfully!" : "Notification queued successfully!");
+                    // Reset fields
+                    setSendData(prev => ({ ...prev, to: '', subject: '', body: '' }));
+                    setSelectedTemplateName('');
+                    setTemplateVars({});
+                    fetchHistory();
+                    fetchSchedules();
+                    fetchAuditLogs();
+                } else {
+                    const errText = await res.text();
+                    alert("Failure: " + errText);
+                }
+            } catch (err) {
+                alert("Error sending request: " + err.message);
+            }
+        };
+
+        const handleTemplateChange = (e) => {
+            const name = e.target.value;
+            setSelectedTemplateName(name);
+            if (!name) {
+                setTemplateVars({});
+                return;
+            }
+
+            const temp = templates.find(t => t.name === name);
+            if (temp) {
+                setSendData(prev => ({ ...prev, type: temp.channel }));
+                
+                // Scan content for {{variables}}
+                const matches = temp.content.match(/\{\{([^}]+)\}\}/g) || [];
+                const vars = {};
+                matches.forEach(m => {
+                    const varName = m.replace(/[{}]/g, '').trim();
+                    vars[varName] = '';
+                });
+                setTemplateVars(vars);
+            }
+        };
+
+        const handleVarChange = (key, val) => {
+            setTemplateVars(prev => ({ ...prev, [key]: val }));
+        };
+
+        // Create API Key
+        const handleCreateApiKey = async (e) => {
+            e.preventDefault();
+            const activePerms = Object.keys(apiKeyPerms).filter(k => apiKeyPerms[k]);
+            
+            try {
+                const res = await fetch('/api/v1/api-keys', {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({
+                        name: apiKeyName,
+                        permissions: activePerms
+                    })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    setNewApiKey(data.key);
+                    alert("API Key successfully generated!");
+                    setApiKeyName('');
+                    fetchKeys();
+                    fetchAuditLogs();
+                } else {
+                    alert("Failed to generate API Key");
+                }
+            } catch (err) {
+                alert("Error: " + err.message);
+            }
+        };
+
+        // Revoke API Key
+        const handleRevokeKey = async (id) => {
+            if (!confirm("Are you sure you want to revoke this API Key?")) return;
+            try {
+                const res = await fetch(`/api/v1/api-keys/${id}`, {
+                    method: 'DELETE',
+                    headers: getHeaders()
+                });
+                if (res.ok) {
+                    alert("API Key revoked");
+                    fetchKeys();
+                    fetchAuditLogs();
+                }
+            } catch (err) {
+                alert("Error: " + err.message);
+            }
+        };
+
+        // Create Webhook
+        const handleCreateWebhook = async (e) => {
+            e.preventDefault();
+            const activeEvents = Object.keys(webhookEvents).filter(ev => webhookEvents[ev]);
+
+            try {
+                const res = await fetch('/api/v1/webhooks', {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({
+                        url: webhookUrl,
+                        events: activeEvents
+                    })
+                });
+
+                if (res.ok) {
+                    alert("Webhook subscription registered!");
+                    setWebhookUrl('');
+                    fetchWebhooks();
+                    fetchAuditLogs();
+                } else {
+                    alert("Failed to register webhook");
+                }
+            } catch (err) {
+                alert("Error: " + err.message);
+            }
+        };
+
+        const handleRevokeWebhook = async (id) => {
+            try {
+                const res = await fetch(`/api/v1/webhooks/${id}`, {
+                    method: 'DELETE',
+                    headers: getHeaders()
+                });
+                if (res.ok) {
+                    alert("Webhook subscription cancelled");
+                    fetchWebhooks();
+                    fetchAuditLogs();
+                }
+            } catch (err) {
+                alert("Error: " + err.message);
+            }
+        };
+
+        // Revoke Schedule
+        const handleCancelSchedule = async (id) => {
+            try {
+                const res = await fetch(`/api/v1/notifications/schedules/${id}`, {
+                    method: 'DELETE',
+                    headers: getHeaders()
+                });
+                if (res.ok) {
+                    alert("Schedule successfully deleted");
+                    fetchSchedules();
+                    fetchAuditLogs();
+                }
+            } catch (err) {
+                alert("Error: " + err.message);
+            }
+        };
+
+        // Create Template
+        const handleCreateTemplate = async (e) => {
+            e.preventDefault();
+            try {
+                const res = await fetch('/api/v1/templates', {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify(newTemplate)
+                });
+                if (res.ok) {
+                    alert("Template saved!");
+                    setNewTemplate({ name: '', subject: '', content: '', channel: 'EMAIL' });
+                    fetchTemplates();
+                    fetchAuditLogs();
+                } else {
+                    alert("Failed to save template");
+                }
+            } catch (err) {
+                alert("Error: " + err.message);
+            }
+        };
+
+        const handleDeleteTemplate = async (id) => {
+            try {
+                const res = await fetch(`/api/v1/templates/${id}`, {
+                    method: 'DELETE',
+                    headers: getHeaders()
+                });
+                if (res.ok) {
+                    alert("Template deleted");
+                    fetchTemplates();
+                    fetchAuditLogs();
+                }
+            } catch (err) {
+                alert("Error: " + err.message);
+            }
+        };
+
+        return (
+            <div className="app-container">
+                {/* Header Section */}
+                <header>
+                    <div className="logo-area">
+                        <div className="logo-icon">▲</div>
+                        <div className="logo-text">
+                            <h1>Nexus Notification Hub</h1>
+                            <p>Spring Boot 3.4.0 & Java 24 Notification Engine</p>
+                        </div>
+                    </div>
+                    
+                    <div className="nav-controls">
+                        <div className="connection-indicator">
+                            <span className={`dot ${wsConnected ? 'dot-green' : 'dot-red'}`}></span>
+                            <span>{wsConnected ? 'Live Feed Connected' : 'Live Feed Connecting...'}</span>
+                        </div>
+                        
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            <label className="form-label" style={{ margin: 0, textTransform: 'none' }}>Active API Key:</label>
+                            <input 
+                                type="password" 
+                                className="form-input" 
+                                style={{ width: '160px', padding: '6px 10px' }} 
+                                value={apiKey} 
+                                onChange={(e) => setApiKey(e.target.value)}
+                            />
+                        </div>
+
+                        <button className="theme-toggle" onClick={toggleTheme} title="Toggle Dark/Light Mode">
+                            {theme === 'light' ? '🌙' : '☀️'}
+                        </button>
+                    </div>
+                </header>
+
+                {/* Stats Grid */}
+                <div className="stats-grid">
+                    <div className="stat-card">
+                        <div className="stat-header">TOTAL DISPATCHED</div>
+                        <div className="stat-value">{stats.total}</div>
+                    </div>
+                    <div className="stat-card stat-success">
+                        <div className="stat-header">DELIVERED (SUCCESS)</div>
+                        <div className="stat-value">{stats.delivered}</div>
+                    </div>
+                    <div className="stat-card stat-failed">
+                        <div className="stat-header">FAILED DELIVERIES</div>
+                        <div className="stat-value">{stats.failed}</div>
+                    </div>
+                    <div className="stat-card stat-scheduled">
+                        <div className="stat-header">ACTIVE CRON JOBS</div>
+                        <div className="stat-value">{stats.activeSchedules}</div>
+                    </div>
+                </div>
+
+                {/* Main Workspace */}
+                <div className="workspace-grid">
+                    {/* Left Column: Input Forms */}
+                    <div>
+                        {/* Send Notification Card */}
+                        <div className="card">
+                            <div className="card-title">Send Notification Panel</div>
+                            <form onSubmit={handleSendNotification}>
+                                <div className="form-group">
+                                    <label className="form-label">Recipient</label>
+                                    <input 
+                                        type="text" 
+                                        className="form-input" 
+                                        required 
+                                        placeholder="email@example.com / phone number / Slack webhook URL"
+                                        value={sendData.to} 
+                                        onChange={(e) => setSendData(prev => ({ ...prev, to: e.target.value }))}
+                                    />
+                                </div>
+
+                                <div className="input-row">
+                                    <div className="form-group">
+                                        <label className="form-label">Template Selector</label>
+                                        <select className="form-select" value={selectedTemplateName} onChange={handleTemplateChange}>
+                                            <option value="">-- Plain Text --</option>
+                                            {templates.map(t => (
+                                                <option key={t.id} value={t.name}>{t.name} ({t.channel})</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Notification Type</label>
+                                        <select 
+                                            className="form-select" 
+                                            value={sendData.type} 
+                                            disabled={!!selectedTemplateName}
+                                            onChange={(e) => setSendData(prev => ({ ...prev, type: e.target.value }))}
+                                        >
+                                            <option value="EMAIL">Email</option>
+                                            <option value="SMS">SMS</option>
+                                            <option value="PUSH">Push Notification</option>
+                                            <option value="SLACK">Slack Webhook</option>
+                                            <option value="TEAMS">Microsoft Teams</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {/* Render dynamic template variable inputs */}
+                                {Object.keys(templateVars).length > 0 && (
+                                    <div className="variables-box">
+                                        <div className="form-label" style={{ marginBottom: '8px' }}>Template Variables</div>
+                                        {Object.keys(templateVars).map(key => (
+                                            <div className="variable-item" key={key}>
+                                                <span style={{ fontSize: '0.85em', alignSelf: 'center', width: '100px', fontWeight: 'bold' }}>{key}</span>
+                                                <input 
+                                                    type="text" 
+                                                    className="form-input" 
+                                                    placeholder={`Value for ${key}`}
+                                                    value={templateVars[key]} 
+                                                    required
+                                                    onChange={(e) => handleVarChange(key, e.target.value)}
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {sendData.type === 'EMAIL' && (
+                                    <div className="form-group">
+                                        <label className="form-label">Subject</label>
+                                        <input 
+                                            type="text" 
+                                            className="form-input" 
+                                            placeholder="Enter subject line..."
+                                            value={sendData.subject} 
+                                            disabled={!!selectedTemplateName && !sendData.isScheduled}
+                                            onChange={(e) => setSendData(prev => ({ ...prev, subject: e.target.value }))}
+                                        />
+                                    </div>
+                                )}
+
+                                {!selectedTemplateName && (
+                                    <div className="form-group">
+                                        <label className="form-label">Message Content</label>
+                                        <textarea 
+                                            className="form-textarea" 
+                                            required 
+                                            placeholder="Enter message body here..."
+                                            value={sendData.body} 
+                                            onChange={(e) => setSendData(prev => ({ ...prev, body: e.target.value }))}
+                                        />
+                                    </div>
+                                )}
+
+                                <div className="form-group" style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                    <input 
+                                        type="checkbox" 
+                                        id="scheduleToggle" 
+                                        checked={sendData.isScheduled} 
+                                        onChange={(e) => setSendData(prev => ({ ...prev, isScheduled: e.target.checked }))}
+                                    />
+                                    <label htmlFor="scheduleToggle" className="form-label" style={{ margin: 0, textTransform: 'none', cursor: 'pointer' }}>
+                                        Schedule this notification using Cron
+                                    </label>
+                                </div>
+
+                                {sendData.isScheduled && (
+                                    <div className="form-group">
+                                        <label className="form-label">Cron Expression</label>
+                                        <input 
+                                            type="text" 
+                                            className="form-input" 
+                                            placeholder="e.g. 0 * * * * ? (Every minute)"
+                                            value={sendData.cronExpression} 
+                                            onChange={(e) => setSendData(prev => ({ ...prev, cronExpression: e.target.value }))}
+                                        />
+                                        <small style={{ color: 'var(--text-secondary)', fontSize: '0.75em' }}>Standard Spring 6-field Cron Trigger</small>
+                                    </div>
+                                )}
+
+                                <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>
+                                    {sendData.isScheduled ? '🕒 Schedule Alert' : '⚡ Dispatch Notification'}
+                                </button>
+                            </form>
+                        </div>
+
+                        {/* API Key management */}
+                        <div className="card">
+                            <div className="card-title">API Key Provisioning</div>
+                            <form onSubmit={handleCreateApiKey} style={{ marginBottom: '15px' }}>
+                                <div className="form-group">
+                                    <label className="form-label">Key Label/Client Name</label>
+                                    <input 
+                                        type="text" 
+                                        className="form-input" 
+                                        required 
+                                        placeholder="e.g., Billing Service"
+                                        value={apiKeyName} 
+                                        onChange={(e) => setApiKeyName(e.target.value)}
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Permissions</label>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                                        {Object.keys(apiKeyPerms).map(perm => (
+                                            <div key={perm} style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                                                <input 
+                                                    type="checkbox" 
+                                                    id={perm} 
+                                                    checked={apiKeyPerms[perm]} 
+                                                    onChange={(e) => setApiKeyPerms(prev => ({ ...prev, [perm]: e.target.checked }))}
+                                                />
+                                                <label htmlFor={perm} style={{ fontSize: '0.8em', color: 'var(--text-secondary)' }}>{perm}</label>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                <button type="submit" className="btn btn-secondary" style={{ width: '100%' }}>Generate API Key</button>
+                            </form>
+
+                            {newApiKey && (
+                                <div style={{ marginTop: '16px' }}>
+                                    <label className="form-label" style={{ color: 'var(--success)' }}>Generated API Key (Copy Now!):</label>
+                                    <div className="api-key-box">
+                                        <span>{newApiKey}</span>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div style={{ marginTop: '20px' }}>
+                                <label className="form-label">Active Platform Keys</label>
+                                <div style={{ maxHeight: '180px', overflowY: 'auto' }}>
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                <th>Name</th>
+                                                <th>Prefix</th>
+                                                <th>Status</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {apiKeysList.map(key => (
+                                                <tr key={key.id}>
+                                                    <td>{key.name}</td>
+                                                    <td><code>{key.keyPrefix}...</code></td>
+                                                    <td>
+                                                        <span className={`badge ${key.active ? 'badge-success' : 'badge-failed'}`}>
+                                                            {key.active ? 'Active' : 'Revoked'}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        {key.active && (
+                                                            <button 
+                                                                onClick={() => handleRevokeKey(key.id)} 
+                                                                className="btn btn-secondary" 
+                                                                style={{ padding: '4px 8px', fontSize: '0.75em' }}
+                                                            >
+                                                                Revoke
+                                                            </button>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Templates Creation Card */}
+                        <div className="card">
+                            <div className="card-title">Register Message Template</div>
+                            <form onSubmit={handleCreateTemplate}>
+                                <div className="input-row">
+                                    <div className="form-group">
+                                        <label className="form-label">Template Identifier</label>
+                                        <input 
+                                            type="text" 
+                                            className="form-input" 
+                                            required 
+                                            placeholder="e.g. welcome-email"
+                                            value={newTemplate.name} 
+                                            onChange={(e) => setNewTemplate(prev => ({ ...prev, name: e.target.value }))}
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Template Channel</label>
+                                        <select 
+                                            className="form-select" 
+                                            value={newTemplate.channel}
+                                            onChange={(e) => setNewTemplate(prev => ({ ...prev, channel: e.target.value }))}
+                                        >
+                                            <option value="EMAIL">Email</option>
+                                            <option value="SMS">SMS</option>
+                                            <option value="PUSH">Push</option>
+                                            <option value="SLACK">Slack</option>
+                                            <option value="TEAMS">Teams</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                {newTemplate.channel === 'EMAIL' && (
+                                    <div className="form-group">
+                                        <label className="form-label">Subject Template</label>
+                                        <input 
+                                            type="text" 
+                                            className="form-input" 
+                                            placeholder="e.g. Welcome {{name}}!"
+                                            value={newTemplate.subject} 
+                                            onChange={(e) => setNewTemplate(prev => ({ ...prev, subject: e.target.value }))}
+                                        />
+                                    </div>
+                                )}
+                                <div className="form-group">
+                                    <label className="form-label">Template Content</label>
+                                    <textarea 
+                                        className="form-textarea" 
+                                        required 
+                                        placeholder="Use double curly braces for variables, e.g. Hello {{name}}, click {{link}}"
+                                        value={newTemplate.content} 
+                                        onChange={(e) => setNewTemplate(prev => ({ ...prev, content: e.target.value }))}
+                                    />
+                                </div>
+                                <button type="submit" className="btn btn-secondary" style={{ width: '100%' }}>Register Template</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    {/* Right Column: Live Feed & Logs */}
+                    <div>
+                        {/* Metrics Chart */}
+                        <div className="card">
+                            <div className="card-title">Real-Time Delivery Trends</div>
+                            <div style={{ height: '200px', position: 'relative' }}>
+                                <canvas ref={chartRef}></canvas>
+                            </div>
+                        </div>
+
+                        {/* Live Feed List */}
+                        <div className="card">
+                            <div className="card-title">
+                                <span>WebSocket Event Pipeline</span>
+                                <span style={{ fontSize: '0.65em' }} className="badge badge-info">Real-Time Feed</span>
+                            </div>
+                            <div className="feed-list">
+                                {liveFeed.length === 0 ? (
+                                    <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                                        Awaiting incoming websocket logs...
+                                    </div>
+                                ) : (
+                                    liveFeed.map((item, idx) => (
+                                        <div className="feed-item" key={idx}>
+                                            <div>
+                                                <strong style={{ color: 'var(--primary)' }}>{item.type}</strong> &rarr; {item.recipient}
+                                                <div style={{ color: 'var(--text-secondary)', fontSize: '0.85em', marginTop: '4px' }}>
+                                                    Msg ID: <code>{item.notificationId.substring(0, 8)}...</code>
+                                                </div>
+                                            </div>
+                                            <div style={{ textAlign: 'right' }}>
+                                                <span className={`badge ${
+                                                    item.status === 'SENT' || item.status === 'DELIVERED' || item.status === 'OPENED' || item.status === 'CLICKED'
+                                                        ? 'badge-success' 
+                                                        : item.status === 'PENDING' ? 'badge-pending' : 'badge-failed'
+                                                }`}>
+                                                    {item.status}
+                                                </span>
+                                                {item.errorMessage && (
+                                                    <div style={{ color: 'var(--danger)', fontSize: '0.8em', marginTop: '4px' }}>{item.errorMessage}</div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Webhook Registration Card */}
+                        <div className="card">
+                            <div className="card-title">Webhook Destinations</div>
+                            <form onSubmit={handleCreateWebhook} style={{ marginBottom: '15px' }}>
+                                <div className="form-group">
+                                    <label className="form-label">Subscription URL</label>
+                                    <input 
+                                        type="url" 
+                                        className="form-input" 
+                                        required 
+                                        placeholder="https://yourdomain.com/webhook"
+                                        value={webhookUrl} 
+                                        onChange={(e) => setWebhookUrl(e.target.value)}
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Subscribe Events</label>
+                                    <div style={{ display: 'flex', gap: '12px' }}>
+                                        {Object.keys(webhookEvents).map(ev => (
+                                            <div key={ev} style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                                                <input 
+                                                    type="checkbox" 
+                                                    id={`ev_${ev}`} 
+                                                    checked={webhookEvents[ev]} 
+                                                    onChange={(e) => setWebhookEvents(prev => ({ ...prev, [ev]: e.target.checked }))}
+                                                />
+                                                <label htmlFor={`ev_${ev}`} style={{ fontSize: '0.85em' }}>{ev}</label>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                                <button type="submit" className="btn btn-secondary" style={{ width: '100%' }}>Register Webhook Destination</button>
+                            </form>
+                            <div>
+                                <label className="form-label">Active Subscriptions</label>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Target URL</th>
+                                            <th>Events</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {webhooks.map(wh => (
+                                            <tr key={wh.id}>
+                                                <td style={{ wordBreak: 'break-all', fontSize: '0.85em' }}><code>{wh.url}</code></td>
+                                                <td><span style={{ fontSize: '0.7em' }}>{wh.events.join(', ')}</span></td>
+                                                <td>
+                                                    <button 
+                                                        onClick={() => handleRevokeWebhook(wh.id)} 
+                                                        className="btn btn-secondary" 
+                                                        style={{ padding: '4px 8px', fontSize: '0.75em' }}
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        {/* Active Schedules list */}
+                        <div className="card">
+                            <div className="card-title">Cron Job Pipeline</div>
+                            <div className="table-container">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Channel</th>
+                                            <th>Recipient</th>
+                                            <th>Cron Schedule</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {schedulesList.map(sch => (
+                                            <tr key={sch.id}>
+                                                <td><span className="badge badge-info">{sch.type}</span></td>
+                                                <td>{sch.recipient}</td>
+                                                <td><code>{sch.cronExpression}</code></td>
+                                                <td>
+                                                    <button 
+                                                        onClick={() => handleCancelSchedule(sch.id)} 
+                                                        className="btn btn-secondary" 
+                                                        style={{ padding: '4px 8px', fontSize: '0.75em' }}
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        {/* Exports and Logs downloads */}
+                        <div className="card">
+                            <div className="card-title">Reports & Export Utilities</div>
+                            <div style={{ display: 'flex', gap: '12px' }}>
+                                <button 
+                                    onClick={() => window.open(`/api/v1/notifications/export/csv?apiKey=${apiKey}`)}
+                                    className="btn btn-primary" 
+                                    style={{ flex: 1 }}
+                                >
+                                    📥 Download CSV Report
+                                </button>
+                                <button 
+                                    onClick={() => window.open(`/api/v1/notifications/export/pdf?apiKey=${apiKey}`)}
+                                    className="btn btn-primary" 
+                                    style={{ flex: 1, backgroundColor: 'var(--accent)' }}
+                                >
+                                    📄 Download PDF Report
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Audit Logs card */}
+                        <div className="card">
+                            <div className="card-title">Administrative Audit Logs</div>
+                            <div style={{ maxHeight: '250px', overflowY: 'auto', fontSize: '0.85em' }}>
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Action</th>
+                                            <th>Actor</th>
+                                            <th>IP Address</th>
+                                            <th>Details</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {auditLogs.map(log => (
+                                            <tr key={log.id}>
+                                                <td><strong>{log.action}</strong></td>
+                                                <td>{log.apiKeyName}</td>
+                                                <td><code>{log.ipAddress}</code></td>
+                                                <td style={{ color: 'var(--text-secondary)' }}>{log.details}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    const container = document.getElementById('root');
+    const root = ReactDOM.createRoot(container);
+    root.render(<App />);
+</script>
+</body>
+</html>
